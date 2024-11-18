@@ -1,22 +1,23 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
         PROJECT_PATH = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud'
         VIRTUAL_ENV = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud\\venv'
         PYTHON_PATH = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud\\venv\\Scripts\\python.exe'
+        DEPLOY_DIR = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\DeployedApp'
     }
 
     stages {
         stage('Setup') {
             steps {
                 script {
-                    // Upgrade pip and install dependencies
                     bat """
                     call "${VIRTUAL_ENV}\\Scripts\\activate"
                     "${PYTHON_PATH}" -m pip install --upgrade pip
                     if exist "${PROJECT_PATH}\\requirements.txt" (
                         "${PYTHON_PATH}" -m pip install -r "${PROJECT_PATH}\\requirements.txt"
+                        "${PYTHON_PATH}" -m pip install coverage bandit
                     ) else (
                         echo "requirements.txt not found at ${PROJECT_PATH}!" && exit /b 1
                     )
@@ -28,7 +29,6 @@ pipeline {
         stage('Lint') {
             steps {
                 script {
-                    // Run flake8 for linting
                     bat """
                     call "${VIRTUAL_ENV}\\Scripts\\activate"
                     flake8 "${PROJECT_PATH}\\app.py"
@@ -48,11 +48,48 @@ pipeline {
             }
         }
 
+        stage('Coverage') {
+            steps {
+                script {
+                    bat """
+                    call "${VIRTUAL_ENV}\\Scripts\\activate"
+                    coverage run --source="${PROJECT_PATH}" -m pytest "${PROJECT_PATH}\\tests\\test_app.py"
+                    coverage report
+                    coverage html -d "${PROJECT_PATH}\\coverage_html"
+                    """
+                }
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                script {
+                    bat """
+                    call "${VIRTUAL_ENV}\\Scripts\\activate"
+                    bandit -r "${PROJECT_PATH}" -f txt -o "${PROJECT_PATH}\\bandit_report.txt"
+                    """
+                }
+            }
+        }
+
         stage('Deploy') {
             steps {
                 script {
-                    // ADD DEPLOYMENT LOGIC HERE. 
-                    echo "Deploying application from ${PROJECT_PATH}..."
+                    bat """
+                    REM Ensure deployment directory exists
+                    if not exist "${DEPLOY_DIR}" (
+                        mkdir "${DEPLOY_DIR}"
+                    )
+
+                    REM Copy application files to deployment directory
+                    xcopy "${PROJECT_PATH}\\app.py" "${DEPLOY_DIR}" /Y
+
+                    REM Copy test and other related files if needed
+                    xcopy "${PROJECT_PATH}\\tests" "${DEPLOY_DIR}\\tests" /E /I /Y
+
+                    REM Confirm deployment success
+                    echo "Application successfully deployed to ${DEPLOY_DIR}!"
+                    """
                 }
             }
         }
@@ -60,7 +97,6 @@ pipeline {
 
     post {
         always {
-            // Clean workspace (optional, as all files are outside Jenkins workspace)
             cleanWs()
         }
     }
