@@ -40,10 +40,9 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // Run pytest for unit tests
                     bat """
                     call "${VIRTUAL_ENV}\\Scripts\\activate"
-                    pytest --rootdir="${PROJECT_PATH}"
+                    pytest "${PROJECT_PATH}\\tests\\test_app.py"
                     """
                 }
             }
@@ -52,7 +51,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Placeholder for deployment logic
+                    // ADD DEPLOYMENT LOGIC HERE. 
                     echo "Deploying application from ${PROJECT_PATH}..."
                 }
             }
