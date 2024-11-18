@@ -3,16 +3,22 @@ pipeline {
 
     environment {
         VIRTUAL_ENV = 'venv'
+        PYTHON_PATH = 'C:\\Python39' // Adjust this to your Python installation path
     }
 
     stages {
         stage('Setup') {
             steps {
                 script {
-                    if (!fileExists("${env.WORKSPACE}/${VIRTUAL_ENV}")) {
-                        sh "python -m venv ${VIRTUAL_ENV}"
-                    }
-                    sh "source ${VIRTUAL_ENV}/bin/activate && pip install -r requirements.txt"
+                    // Create virtual environment and install dependencies
+                    bat """
+                    if not exist ${VIRTUAL_ENV} (
+                        ${PYTHON_PATH}\\python -m venv ${VIRTUAL_ENV}
+                    )
+                    call ${VIRTUAL_ENV}\\Scripts\\activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    """
                 }
             }
         }
@@ -20,7 +26,11 @@ pipeline {
         stage('Lint') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate && flake8 app.py"
+                    // Run flake8 for linting
+                    bat """
+                    call ${VIRTUAL_ENV}\\Scripts\\activate
+                    flake8 app.py
+                    """
                 }
             }
         }
@@ -28,7 +38,11 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate && pytest"
+                    // Run pytest for unit tests
+                    bat """
+                    call ${VIRTUAL_ENV}\\Scripts\\activate
+                    pytest
+                    """
                 }
             }
         }
@@ -36,8 +50,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    // Placeholder for deployment logic
                     echo "Deploying application..."
-                    // Add deployment logic here
                 }
             }
         }
@@ -45,6 +59,7 @@ pipeline {
 
     post {
         always {
+            // Clean up workspace after the build
             cleanWs()
         }
     }
