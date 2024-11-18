@@ -2,23 +2,23 @@ pipeline {
     agent any
 
     environment {
+        PROJECT_PATH = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud'
         VIRTUAL_ENV = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud\\venv'
         PYTHON_PATH = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud\\venv\\Scripts\\python.exe'
-        REQUIREMENTS_PATH = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud\\requirements.txt'
     }
 
     stages {
         stage('Setup') {
             steps {
                 script {
-                    // Upgrade pip and install dependencies from the specified path
+                    // Upgrade pip and install dependencies
                     bat """
                     call "${VIRTUAL_ENV}\\Scripts\\activate"
                     "${PYTHON_PATH}" -m pip install --upgrade pip
-                    if exist "${REQUIREMENTS_PATH}" (
-                        "${PYTHON_PATH}" -m pip install -r "${REQUIREMENTS_PATH}"
+                    if exist "${PROJECT_PATH}\\requirements.txt" (
+                        "${PYTHON_PATH}" -m pip install -r "${PROJECT_PATH}\\requirements.txt"
                     ) else (
-                        echo "requirements.txt not found in ${REQUIREMENTS_PATH}!" && exit /b 1
+                        echo "requirements.txt not found at ${PROJECT_PATH}!" && exit /b 1
                     )
                     """
                 }
@@ -31,7 +31,7 @@ pipeline {
                     // Run flake8 for linting
                     bat """
                     call "${VIRTUAL_ENV}\\Scripts\\activate"
-                    flake8 app.py
+                    flake8 "${PROJECT_PATH}\\app.py"
                     """
                 }
             }
@@ -43,7 +43,7 @@ pipeline {
                     // Run pytest for unit tests
                     bat """
                     call "${VIRTUAL_ENV}\\Scripts\\activate"
-                    pytest
+                    pytest --rootdir="${PROJECT_PATH}"
                     """
                 }
             }
@@ -52,7 +52,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying application..."
+                    // Placeholder for deployment logic
+                    echo "Deploying application from ${PROJECT_PATH}..."
                 }
             }
         }
@@ -60,6 +61,7 @@ pipeline {
 
     post {
         always {
+            // Clean workspace (optional, as all files are outside Jenkins workspace)
             cleanWs()
         }
     }
