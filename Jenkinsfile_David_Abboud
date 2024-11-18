@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         VIRTUAL_ENV = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud\\venv'
-        PYTHON_PATH = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud\\venv\\Scripts\\python.exe'
+        PYTHON_PATH = 'C:\\Users\\David Abboud\\OneDrive - American University of Beirut\\EECE 435L\\Lab10-david-abboud'
     }
 
     stages {
